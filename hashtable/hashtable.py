@@ -22,6 +22,9 @@ class HashTable:
 
     def __init__(self, capacity):
         # Your code here
+        self.capacity = capacity if capacity != MIN_CAPACITY else capacity
+        self.table = [None] * self.capacity
+        self.size = 0
 
 
     def get_num_slots(self):
@@ -35,7 +38,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        return self.capacity
 
     def get_load_factor(self):
         """
@@ -44,6 +47,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        return self.elements // self.get_num_slots()
 
 
     def fnv1(self, key):
@@ -63,14 +67,18 @@ class HashTable:
         Implement this, and/or FNV-1.
         """
         # Your code here
-
+        hashed = 6812
+        for c in key:
+            hashed = hashed * 99 + ord(c)
+            hashed &= 0xffffffff
+        return hashed
 
     def hash_index(self, key):
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
+        # return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
     def put(self, key, value):
@@ -82,6 +90,21 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.hash_index(key)
+        entry = self.table[index]
+        if not entry:
+            self.size += 1
+            self.table[index] = HashTableEntry(key, value)
+        else:
+            if entry.key == key:
+                self.table[index] = HashTableEntry(key, value)
+            while entry.next:
+                if entry.key == key:
+                    return
+                entry = entry.next
+            self.size += 1
+            entry.next = HashTableEntry(key, value)
+                
 
 
     def delete(self, key):
@@ -93,6 +116,28 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.hash_index(key)
+        if not self.table[index]:
+            print(f'{key} not found')
+        else:
+            previous_entry = None
+            entry = self.table[index]
+            if not entry.next:
+                self.size -= 1
+                self.table[index] = None
+                return entry.value
+            while entry:
+                if entry.key == key:
+                    if not previous_entry and entry.next:
+                        self.size -= 1
+                        self.table[index] = entry.next
+                        return entry.value
+                    else:
+                        self.size -= 1
+                        previous_entry.next = entry.next
+                previous_entry = entry
+                entry = entry.next
+            print(f'{key} not found')
 
 
     def get(self, key):
@@ -104,7 +149,16 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        index = self.hash_index(key)
+        if not self.table[index]:
+            return
+        else:
+            entry = self.table[index]
+            while entry:
+                if entry.key == key:
+                    return entry.value
+                entry = entry.next
+            return
 
     def resize(self, new_capacity):
         """
@@ -114,7 +168,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        pass
 
 
 if __name__ == "__main__":
